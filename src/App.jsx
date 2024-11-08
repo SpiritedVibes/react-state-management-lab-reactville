@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
 const App = () => {
-  const [zombieFighters, setFighter] = useState([
+  const [zombieFighters, setZombieFighters] = useState([
     {
       name: 'Survivor',
       price: 12,
@@ -76,38 +76,54 @@ const App = () => {
 
   const [totalStrength, setTotalStrength] = useState(0)
   const [totalAgility, setTotalAgility] = useState(0)
+  const [removedFighters, setRemovedFighters] = useState([])
+  const [newFighter, setNewFighter] = useState({
+    name: '',
+    price: '',
+    strength: '',
+    agility: '',
+    img: '',
+  })
 
-  // Helper functions to calculate
-  const calculateTotalStrength = (fighters) => {
-    return fighters.reduce((total, fighter) => total + fighter.strength, 0);
-  }
-const calculateTotalAgility = (fighters) => {
-  return fighters.reduce((total, fighter) => total + fighter.agility, 0)
-}
-
+  const calculateTotalStrength = (fighters) =>
+    fighters.reduce((total, fighter) => total + fighter.strength, 0)
+  
+  const calculateTotalAgility = (fighters) =>
+    fighters.reduce((total, fighter) => total + fighter.agility, 0)
 
   const handleAddFighter = () => {
-    const newFighter = {
-      name: 'New Fighter',
-      price: 13,
-      strength: 5,
-      agility: 7,
-      img: 'placeholder',
+    const fighter = {
+      ...newFighter,
+      price: parseInt(newFighter.price),
+      strength: parseInt(newFighter.strength),
+      agility: parseInt(newFighter.agility),
     }
-    const updatedFighters = [...zombieFighters, newFighter];
-    setFighter(updatedFighters);
-    setTotalStrength(calculateTotalStrength(updatedFighters)) // Recalculate total strength
+    
+    const updatedFighters = [...zombieFighters, fighter]
+    setZombieFighters(updatedFighters)
+    setTotalStrength(calculateTotalStrength(updatedFighters))
     setTotalAgility(calculateTotalAgility(updatedFighters))
+    setNewFighter({ name: '', price: '', strength: '', agility: '', img: '' })
   }
 
   const handleRemoveFighter = (idx) => {
-    const updatedFighters = zombieFighters.filter((_, index) => index !== idx);
-    setFighter(updatedFighters);
+    const removed = zombieFighters[idx]
+    setRemovedFighters([...removedFighters, removed])
+    const updatedFighters = zombieFighters.filter((_, index) => index !== idx)
+    setZombieFighters(updatedFighters)
     setTotalStrength(calculateTotalStrength(updatedFighters))
     setTotalAgility(calculateTotalAgility(updatedFighters))
   }
 
-  // Update total strength when zombieFighters changes
+  const handleRestoreFighter = (idx) => {
+    const restored = removedFighters[idx]
+    const updatedFighters = [...zombieFighters, restored]
+    setZombieFighters(updatedFighters)
+    setTotalStrength(calculateTotalStrength(updatedFighters))
+    setTotalAgility(calculateTotalAgility(updatedFighters))
+    setRemovedFighters(removedFighters.filter((_, index) => index !== idx))
+  }
+
   useEffect(() => {
     setTotalStrength(calculateTotalStrength(zombieFighters))
     setTotalAgility(calculateTotalAgility(zombieFighters))
@@ -115,9 +131,42 @@ const calculateTotalAgility = (fighters) => {
 
   return (
     <>
+      <h2>Add a New Fighter</h2>
+      <input
+        type="text"
+        placeholder="Name"
+        value={newFighter.name}
+        onChange={(e) => setNewFighter({ ...newFighter, name: e.target.value })}
+      />
+      <input
+        type="number"
+        placeholder="Price"
+        value={newFighter.price}
+        onChange={(e) => setNewFighter({ ...newFighter, price: e.target.value })}
+      />
+      <input
+        type="number"
+        placeholder="Strength"
+        value={newFighter.strength}
+        onChange={(e) => setNewFighter({ ...newFighter, strength: e.target.value })}
+      />
+      <input
+        type="number"
+        placeholder="Agility"
+        value={newFighter.agility}
+        onChange={(e) => setNewFighter({ ...newFighter, agility: e.target.value })}
+      />
+      <input
+        type="text"
+        placeholder="Image URL"
+        value={newFighter.img}
+        onChange={(e) => setNewFighter({ ...newFighter, img: e.target.value })}
+      />
       <button onClick={handleAddFighter}>Add Fighter</button>
+
       <p>Total Team Strength: {totalStrength}</p>
       <p>Total Team Agility: {totalAgility}</p>
+
       {zombieFighters.length === 0 ? (
         <p>Pick some team members!</p>
       ) : (
@@ -133,6 +182,20 @@ const calculateTotalAgility = (fighters) => {
             </li>
           ))}
         </ul>
+      )}
+
+      {removedFighters.length > 0 && (
+        <>
+          <h3>Removed Fighters</h3>
+          <ul>
+            {removedFighters.map((fighter, idx) => (
+              <li key={idx}>
+                <p>Name: {fighter.name}</p>
+                <button onClick={() => handleRestoreFighter(idx)}>Restore</button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </>
   )
